@@ -87,7 +87,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // base fare
-        DB::table('data_master')->insert([
+        DB::table('data_masters')->insert([
             [
                 'tipe' => 'base fare',
                 'description' => '5000',
