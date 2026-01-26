@@ -1,0 +1,211 @@
+@php
+
+$title = 'Form Tunjangan Transport';
+$indexHref = route('backend.tunjangan-transport.index');
+$breadcrumbs[] = 'Tunjangan Transport';
+
+if (isset($model->id)) {
+    $submitHref = route('backend.tunjangan-transport.update', ['tunjangan_transport' => $model->id]);
+    $breadcrumbs[] = 'Update';
+} else {
+    $submitHref = route('backend.tunjangan-transport.store');
+    $breadcrumbs[] = 'Create';
+}
+
+@endphp
+
+@extends('backend/layouts/main', get_defined_vars())
+
+@section('content')
+<form method="POST" action="{{ $submitHref }}" id="form">
+    @csrf
+    @if ($model->id)
+        @method('put')
+    @endif
+
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <div class="card mb-5">
+        <div class="card-body">
+            <h5 class="mb-4">Data Tunjangan Transport</h5>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label required">Pegawai</label>
+                    <select name="employee_id" class="form-select" required>
+                        <option value="">Pilih Pegawai</option>
+                        @foreach($employees as $employee)
+                            <option value="{{ $employee->id }}" 
+                                {{ old('employee_id', $model->employee_id ?? '') == $employee->id ? 'selected' : '' }}>
+                                {{ $employee->nip }} - {{ $employee->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="invalid-feedback"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label required">Tarif Dasar per KM</label>
+                    <div class="input-group">
+                        <span class="input-group-text">Rp</span>
+                        <input type="number" name="base_fare" class="form-control" step="0.01" min="0"
+                               value="{{ old('base_fare', $model->base_fare ?? $baseFare) }}" required>
+                    </div>
+                    <div class="invalid-feedback"></div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label required">Jarak (KM)</label>
+                    <div class="input-group">
+                        <input type="number" name="jarak" class="form-control" step="0.01" min="0" max="50"
+                               value="{{ old('jarak', $model->jarak ?? '') }}" placeholder="12.5" required>
+                        <span class="input-group-text">km</span>
+                    </div>
+                    <div class="form-text">Jarak dari rumah ke kantor. Max 25km untuk perhitungan tunjangan.</div>
+                    <div class="invalid-feedback"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label required">Jumlah Hari Masuk Kerja</label>
+                    <input type="number" name="hari_kerja" class="form-control" min="0" max="31"
+                           value="{{ old('hari_kerja', $model->hari_kerja ?? '') }}" placeholder="22" required>
+                    <div class="form-text">Minimal 19 hari untuk mendapat tunjangan transport.</div>
+                    <div class="invalid-feedback"></div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Keterangan</label>
+                    <textarea name="keterangan" class="form-control" rows="3" 
+                              placeholder="Keterangan tambahan (opsional)">{{ old('keterangan', $model->keterangan ?? '') }}</textarea>
+                    <div class="invalid-feedback"></div>
+                </div>
+            </div>
+
+            @if($model->id)
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <h6>Hasil Perhitungan:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Jarak Bulat:</strong> {{ $model->jarak_bulat }} km</li>
+                            <li><strong>Total Tunjangan:</strong> Rp {{ number_format($model->tunjangan, 0, ',', '.') }}</li>
+                            <li><strong>Status:</strong> 
+                                @if($model->is_eligible)
+                                    <span class="badge bg-success">Memenuhi Syarat</span>
+                                @else
+                                    <span class="badge bg-warning">Tidak Memenuhi Syarat</span>
+                                @endif
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <div class="alert alert-warning">
+                <h6>Ketentuan Tunjangan Transport:</h6>
+                <ul class="mb-0">
+                    <li>Minimal 19 hari kerja dalam sebulan</li>
+                    <li>Jarak minimal 5 km dari rumah ke kantor</li>
+                    <li>Jarak maksimal yang dihitung adalah 25 km</li>
+                    <li>Hanya untuk pegawai tetap</li>
+                    <li>Rumus: Tarif Dasar × Jarak (dibulatkan) × Hari Kerja</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <div class="d-flex justify-content-between">
+                <a href="{{ $indexHref }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+@endsection
+
+@section('scripts')
+    @parent
+    <script type="module">
+        // Add event listeners to input fields
+        const inputFields = document.querySelectorAll('input[name="base_fare"], input[name="jarak"], input[name="hari_kerja"]');
+        inputFields.forEach(input => {
+            input.addEventListener('input', calculatePreview);
+        });
+
+        function calculatePreview() {
+            const baseFare = parseFloat(document.querySelector('input[name="base_fare"]').value) || 0;
+            const jarak = parseFloat(document.querySelector('input[name="jarak"]').value) || 0;
+            const hariKerja = parseInt(document.querySelector('input[name="hari_kerja"]').value) || 0;
+
+            let eligible = true;
+            let messages = [];
+
+            if (hariKerja < 19) {
+                eligible = false;
+                messages.push('Hari kerja kurang dari 19 hari');
+            }
+
+            if (jarak < 5) {
+                eligible = false;
+                messages.push('Jarak kurang dari 5 km');
+            }
+
+            let jarakEfektif = Math.min(jarak, 25);
+            let decimal = jarakEfektif - Math.floor(jarakEfektif);
+            let jarakBulat = decimal < 0.5 ? Math.floor(jarakEfektif) : Math.ceil(jarakEfektif);
+            
+            let tunjangan = eligible ? baseFare * jarakBulat * hariKerja : 0;
+
+            if (baseFare > 0 && jarak > 0 && hariKerja > 0) {
+                let previewHtml = `
+                    <div class="alert alert-info mt-3 preview-calculation">
+                        <h6>Preview Perhitungan:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Jarak Efektif:</strong> ${jarakEfektif.toFixed(2)} km (max 25km)</li>
+                            <li><strong>Jarak Bulat:</strong> ${jarakBulat} km</li>
+                            <li><strong>Estimasi Tunjangan:</strong> Rp ${tunjangan.toLocaleString('id-ID')}</li>
+                            ${!eligible ? `<li class="text-danger"><strong>Status:</strong> ${messages.join(', ')}</li>` : ''}
+                        </ul>
+                    </div>
+                `;
+                
+                const existingPreview = document.querySelector('.preview-calculation');
+                if (existingPreview) {
+                    existingPreview.remove();
+                }
+                
+                const alertWarning = document.querySelector('.card-body .alert-warning');
+                if (alertWarning) {
+                    alertWarning.insertAdjacentHTML('afterend', previewHtml);
+                }
+            } else {
+                const existingPreview = document.querySelector('.preview-calculation');
+                if (existingPreview) {
+                    existingPreview.remove();
+                }
+            }
+        }
+
+        // jmc preset 
+		const dataJson = jsonScriptToFormFields('#form', '#data');
+
+		$('#form').formAjaxSubmit();
+    </script>
+@endsection
