@@ -10,11 +10,7 @@ $searchHref = fn() => $indexHref([
 	'filter' => null,
 ]);
 
-$months = [
-    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-    5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-];
+$months = \App\Helpers\DataHelper::getMonth();
 
 $years = range(date('Y') - 5, date('Y') + 1);
 $currentMonth = request('month', date('m'));
@@ -24,18 +20,20 @@ $currentYear = request('year', date('Y'));
 
 <div class="card-header bg-light text-dark d-md-flex flex-wrap">
 	
-	<div class="mb-2 mb-lg-0">
-		<a href="{{ route('backend.presensi.export') }}?month={{ $currentMonth }}&year={{ $currentYear }}" 
-		   class="btn btn-success d-block d-md-inline-block">
-			<i class="bi bi-download"></i> Download Excel
-		</a>
-	</div>
+	@if (auth()->user()->role->name === 'Admin HRD')
+		<div class="mb-2 mb-lg-0">
+			<a href="{{ route('backend.presensi.export') }}?month={{ $currentMonth }}&year={{ $currentYear }}" 
+			class="btn btn-success d-block d-md-inline-block">
+				<i class="bi bi-download"></i> Download Template
+			</a>
+		</div>
 
-    <div class="mb-2 mb-lg-0 ms-2">
-		<a href="#" data-pjax="0" class="btn btn-primary d-block d-md-inline-block">
-			<i class="bi bi-upload"></i> Import Presensi
-		</a>
-	</div>
+		<div class="mb-2 mb-lg-0 ms-2">
+			<button type="button" class="btn btn-primary d-block d-md-inline-block" data-bs-toggle="modal" data-bs-target="#importPresensiModal">
+				<i class="bi bi-upload"></i> Import Presensi
+			</button>
+		</div>
+	@endif
 
 	<div class="me-md-auto"></div>
 
@@ -79,4 +77,45 @@ $currentYear = request('year', date('Y'));
 			<input type="hidden" name="sorter" value="{{ request('sorter') }}">
 		@endif
 	</form>
+</div>
+
+<!-- Modal Import Presensi -->
+<div class="modal fade" id="importPresensiModal" tabindex="-1" aria-labelledby="importPresensiModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="importPresensiModalLabel">
+					<i class="bi bi-upload"></i> Import Data Presensi
+				</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<form action="{{ route('backend.presensi.import') }}" method="POST" enctype="multipart/form-data">
+				@csrf
+				<div class="modal-body">
+					<div class="mb-3">
+						<label for="excelFile" class="form-label">Pilih File Excel</label>
+						<input type="file" class="form-control" id="excelFile" name="excel_file" accept=".xlsx,.xls" required>
+						<div class="form-text">Format file yang didukung: .xlsx, .xls</div>
+					</div>
+					<div class="alert alert-info" role="alert">
+						<small>
+							<strong>Petunjuk:</strong>
+							<ul class="mb-0 ps-3">
+								<li>Pastikan format file Excel sesuai dengan template</li>
+								<li>Jangan ubah kolom apapun dalam template</li>
+								<li>Lokasi Gedung hanya boleh di isi : Gedung Utama, Gedung A, Gedung B</li>
+								<li>Gunakan format tanggal: YYYY-MM-DD H:i:s untuk kolom tanggal checkin / checkout</li>
+							</ul>
+						</small>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+					<button type="submit" class="btn btn-primary">
+						<i class="bi bi-upload"></i> Upload & Import
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
 </div>

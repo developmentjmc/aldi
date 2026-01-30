@@ -4,6 +4,7 @@
 users
     - id
     - id_role
+    - id_employee
     - name
     - phone
     - username
@@ -40,7 +41,7 @@ accesses
     - delete
     - publish
 
-files
+file
     - id
     - name
     - mime
@@ -94,7 +95,7 @@ data_employee
     - longitude
     - tempat_lahir_kabupaten_id
     - kuota_cuti
-    - cuti
+    - kuota_izin
     - created_by
     - updated_by
 

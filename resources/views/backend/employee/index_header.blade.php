@@ -13,16 +13,18 @@ $searchHref = fn() => $indexHref([
 $jabatanOptions = \App\Enums\JabatanEnum::options();
 $jenisPegawai = \App\Enums\JenisPegawaiEnum::options();
 $masaKerja = [
-    '>' => 'Lebih dari',
-    '=' => 'Sama dengan',
-    '<' => 'Kurang dari',
+    '>' => 'Lebih dari 5 tahun',
+    '<' => 'Kurang dari 5 tahun',
 ];
 
 @endphp
 
 <div class="card-header bg-light text-dark d-md-flex flex-wrap">
 	<div class="mb-2 mb-lg-0">
-		<a href="{{ $createHref }}" data-pjax="0" class="btn btn-primary d-block d-md-inline-block">Create</a>
+		@if (auth()->user()->role->name === 'Admin HRD')
+			<a href="{{ $createHref }}" data-pjax="0" class="btn btn-primary d-block d-md-inline-block">Create</a>
+		@endif
+		<a href="{{ route('backend.pegawai.pdf') }}" class="btn btn-secondary d-block d-md-inline-block ms-2" target="_blank">Export PDF</a>
 	</div>
 
 	<div class="me-md-auto"></div>

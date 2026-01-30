@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
             'id_role' => 1,
             'name' => 'Aldi Pradana',
             'username' => 'aldi',
-            'email' => 'aldi@aldi.com',
+            'email' => 'aldipraddana@gmail.com',
             'password'=> bcrypt('password'),
         ]);
 
@@ -45,39 +45,22 @@ class DatabaseSeeder extends Seeder
 
         /**
          * default access for superadmin role
+         * untuk trial, semua di set all
          */
-        DB::table('accesses')->insert([
-            [
+        $roles = [];
+        for ($i=0; $i < 6; $i++) { 
+            $roles[] = [
                 'id_role' => 1,
-                'id_menu' => 1,
+                'id_menu' => $i + 1,
                 'read' => 'all',
                 'view' => 'all',
                 'create' => 'all',
                 'update' => 'all',
                 'delete' => 'all',
                 'publish' => 'all',
-            ],
-            [
-                'id_role' => 1,
-                'id_menu' => 2,
-                'read' => 'all',
-                'view' => 'all',
-                'create' => 'all',
-                'update' => 'all',
-                'delete' => 'all',
-                'publish' => 'all',
-            ],
-            [ // ini harusnya superadmin tidak punya akses, keperluan deebug aja
-                'id_role' => 1,
-                'id_menu' => 3,
-                'read' => 'all',
-                'view' => 'all',
-                'create' => 'all',
-                'update' => 'all',
-                'delete' => 'all',
-                'publish' => 'all',
-            ],
-        ]);
+            ];
+        }
+        DB::table('accesses')->insert($roles);
 
         $this->call([
             MasterDataProvinsiSeeder::class,

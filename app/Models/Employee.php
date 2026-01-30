@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use jeemce\models\CrudTrait;
+use jeemce\models\Fileable;
 use jeemce\models\MainTrait;
 
 class Employee extends Model
 {
-    use CrudTrait, MainTrait;
+    use CrudTrait, MainTrait, Fileable;
 
     protected $table = 'data_employees';
 
@@ -21,7 +23,6 @@ class Employee extends Model
     protected static function boot()
     {
         parent::boot();
-
         static::saving(function ($model) {
             $model->no_hp = '+62' . $model->no_hp;
         });
@@ -53,6 +54,26 @@ class Employee extends Model
             'status' => ['required', 'string'],
             'jenis_pegawai' => ['required', 'string'],
         ];
+    }
+
+    public function kelurahan(): HasOne
+    {
+        return $this->hasOne(DataMaster::class, 'id', 'alamat_kelurahan_id');
+    }
+
+    public function kecamatan(): HasOne
+    {
+        return $this->hasOne(DataMaster::class, 'id', 'alamat_kecamatan_id');
+    }
+
+    public function kabupaten(): HasOne
+    {
+        return $this->hasOne(DataMaster::class, 'id', 'alamat_kabupaten_id');
+    }
+
+    public function provinsi(): HasOne
+    {
+        return $this->hasOne(DataMaster::class, 'id', 'alamat_provinsi_id');
     }
 
 }

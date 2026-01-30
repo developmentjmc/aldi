@@ -35,7 +35,7 @@ return new class extends Migration
             $table->text('pendidikan')->nullable();
             $table->string('status', 32)->default('active')->nullable();
             $table->string('jenis_pegawai', 32)->nullable();
-            $table->decimal('cuti', 5, 2)->nullable();
+            $table->decimal('kuota_izin', 5, 2)->nullable();
             $table->decimal('kuota_cuti', 5, 2)->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

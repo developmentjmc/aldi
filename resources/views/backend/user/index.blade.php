@@ -32,6 +32,7 @@ $breadcrumbs[] = 'Index';
 				<thead>
 					<tr>
 						<th width="50">Aksi</th>
+						<th>Tanggal</th>
 						<th><a href="{{ $sortHref('name') }}">Name</a></th>
 						<th><a href="{{ $sortHref('phone') }}">Phone</a></th>
 						<th><a href="{{ $sortHref('email') }}">Email</a></th>
@@ -52,6 +53,7 @@ $breadcrumbs[] = 'Index';
 							</a>
 							@endif
 						</td>
+						<td>{{ date('d-m-Y', strtotime($model->created_at)) }}</td>
 						<td>{{ $model->name }}</td>
 						<td>{{ $model->phone }}</td>
 						<td>{{ $model->email }}</td>

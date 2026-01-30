@@ -14,6 +14,9 @@ $searchHref = fn() => $indexHref([
 
 <div class="card-header bg-light text-dark d-md-flex flex-wrap">
     <div class="mb-2 mb-lg-0">
+        {{-- @if ()
+            
+        @endif --}}
         <a href="{{ $createHref }}" data-pjax="0" class="btn btn-primary d-block d-md-inline-block">
             <i class="bi bi-plus"></i> Tambah Data
         </a>

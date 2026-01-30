@@ -24,11 +24,12 @@ return new class extends Migration
             $table->integer('kuota_cuti')->default(12);
             $table->integer('izin')->default(0);
             $table->integer('kuota_izin')->default(6);
-            $table->integer('durasi')->default(0); // dalam menit
-            $table->integer('durasi_hadir')->default(0); // dalam menit
+            $table->integer('durasi')->default(0);
+            $table->decimal('durasi_hadir', 5, 2)->default(0);
             $table->enum('verifikasi', ['disetujui', 'ditolak'])->nullable();
             $table->string('verifikator')->nullable();
             $table->text('keterangan')->nullable();
+            $table->string('status_hadir')->nullable();
             $table->timestamps();
             
             $table->foreign('id_employee')->references('id')->on('data_employees')->onDelete('cascade');

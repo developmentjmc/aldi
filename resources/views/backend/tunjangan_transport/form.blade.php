@@ -44,6 +44,8 @@ if (isset($model->id)) {
                         <option value="">Pilih Pegawai</option>
                         @foreach($employees as $employee)
                             <option value="{{ $employee->id }}" 
+                                data-latitude="{{ $employee->latitude }}"
+                                data-longitude="{{ $employee->longitude }}"
                                 {{ old('employee_id', $model->employee_id ?? '') == $employee->id ? 'selected' : '' }}>
                                 {{ $employee->nip }} - {{ $employee->name }}
                             </option>
@@ -51,23 +53,44 @@ if (isset($model->id)) {
                     </select>
                     <div class="invalid-feedback"></div>
                 </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Rumah Pegawai</label>
+                    <input type="text" class="form-control rumah-pegawai" readonly>
+                </div>
             </div>
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label required">Tarif Dasar per KM</label>
-                    <div class="input-group">
-                        <span class="input-group-text">Rp</span>
-                        <input type="number" name="base_fare" class="form-control" step="0.01" min="0"
-                               value="{{ old('base_fare', $model->base_fare ?? $baseFare) }}" required>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label required">Tarif Dasar per KM</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rp</span>
+                                <input type="number" name="base_fare" class="form-control" step="0.01" min="0" readonly value="{{ old('base_fare', $model->base_fare ?? $baseFare) }}" required>
+                            </div>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label required">Kantor</label>
+                            <select name="kantor" id="" class="form-select">
+                                <option value="">Pilih...</option>
+                                @foreach ($gedung as $item)
+                                <option value="{{ $item->name }}" 
+                                    {{ old('kantor', $model->kantor ?? '') == $item->name ? 'selected' : '' }}
+                                    data-lokasi="{{ $item->description }}">
+                                    {{ $item->name }}
+                                </option>
+                                @endforeach
+                            </select>
+                            <div class="invalid-feedback"></div>
+                        </div>
                     </div>
-                    <div class="invalid-feedback"></div>
                 </div>
 
                 <div class="col-md-6 mb-3">
-                    <label class="form-label required">Jarak (KM)</label>
+                    <label class="form-label required">Jarak (Dari Gedung)</label>
                     <div class="input-group">
-                        <input type="number" name="jarak" class="form-control" step="0.01" min="0" max="50"
+                        <input type="number" name="jarak" class="form-control" step="0.01" min="0"
                                value="{{ old('jarak', $model->jarak ?? '') }}" placeholder="12.5" required>
                         <span class="input-group-text">km</span>
                     </div>
@@ -105,7 +128,7 @@ if (isset($model->id)) {
                                 @if($model->is_eligible)
                                     <span class="badge bg-success">Memenuhi Syarat</span>
                                 @else
-                                    <span class="badge bg-warning">Tidak Memenuhi Syarat</span>
+                                    <span class="badge bg-warning text-white">Tidak Memenuhi Syarat</span>
                                 @endif
                             </li>
                         </ul>
@@ -143,7 +166,60 @@ if (isset($model->id)) {
 @section('scripts')
     @parent
     <script type="module">
-        // Add event listeners to input fields
+
+        // on change
+        function updatePegawaiDanKantor() {
+            const employeeSelect = document.querySelector('select[name="employee_id"]');
+            let latitude = '';
+            let longitude = '';
+            let kantorLat = '';
+            let kantorLong = '';
+            
+            const kantorSelect   = document.querySelector('select[name="kantor"]');
+
+            if (employeeSelect && employeeSelect.value) {
+                const selectedOption = employeeSelect.options[employeeSelect.selectedIndex];
+                latitude  = selectedOption.getAttribute('data-latitude')  || '';
+                longitude = selectedOption.getAttribute('data-longitude') || '';
+                document.querySelector('.rumah-pegawai').value = `Lat: ${latitude}, Long: ${longitude}`;
+            } else {
+                document.querySelector('.rumah-pegawai').value = '';
+            }
+
+            if (kantorSelect && kantorSelect.value) {
+                const kantorOption   = kantorSelect.options[kantorSelect.selectedIndex];
+                const kantorLatLong = kantorOption.getAttribute('data-lokasi') || '';
+                kantorLat= kantorLatLong.split(',')[0] || '';
+                kantorLong= kantorLatLong.split(',')[1] || '';
+            }
+
+            // itung jarak otomatis jika kedua data ada
+            console.log(latitude, longitude, kantorLat, kantorLong);
+            
+            if (latitude && longitude && kantorLat && kantorLong) {
+                const R = 6371; 
+                const dLat = (kantorLat - latitude) * Math.PI / 180;
+                const dLon = (kantorLong - longitude) * Math.PI / 180;
+                const a = 
+                    Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(latitude * Math.PI / 180) * Math.cos(kantorLat * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                const distance = R * c; 
+
+                document.querySelector('input[name="jarak"]').value = distance.toFixed(2);
+                calculatePreview();
+            }
+            
+        }
+
+        ['employee_id', 'kantor'].forEach(name => {
+            const el = document.querySelector(`select[name="${name}"]`);
+            if (el) {
+                el.addEventListener('change', updatePegawaiDanKantor);
+            }
+        });
+
         const inputFields = document.querySelectorAll('input[name="base_fare"], input[name="jarak"], input[name="hari_kerja"]');
         inputFields.forEach(input => {
             input.addEventListener('input', calculatePreview);

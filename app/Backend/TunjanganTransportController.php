@@ -52,7 +52,7 @@ class TunjanganTransportController extends Controller
             'filter' => $request->get('filter'),
             'sorter' => $request->get('sorter'),
         ]);
-
+        
         $models = $query->paginate(config('jeemce.pagination.per_page'));
         return view("backend/tunjangan_transport/index", get_defined_vars());
     }
@@ -78,7 +78,7 @@ class TunjanganTransportController extends Controller
         }
         $baseFare = DataHelper::getBaseFare();
         $employees = DBHelper::select("SELECT * FROM data_employees WHERE jenis_pegawai = 'Tetap' ORDER BY name");
-        
+        $gedung = DBHelper::select("SELECT name, description FROM data_masters WHERE name in ('Gedung Utama', 'Gedung A', 'Gedung B') ORDER BY name");
         return view('backend/tunjangan_transport/form', get_defined_vars());
     }
 

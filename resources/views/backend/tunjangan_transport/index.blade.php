@@ -36,6 +36,7 @@ $breadcrumbs[] = 'Index';
                         <th width="50">No.</th>
                         <th><a href="{{ $sortHref('nip') }}">NIP</a></th>
                         <th><a href="{{ $sortHref('employee_name') }}">Nama Pegawai</a></th>
+                        <th>Gedung Kerja</th>
                         <th><a href="{{ $sortHref('jarak') }}">Jarak (km)</a></th>
                         <th><a href="{{ $sortHref('hari_kerja') }}">Hari Kerja</a></th>
                         <th><a href="{{ $sortHref('base_fare') }}">Tarif/km</a></th>
@@ -49,6 +50,7 @@ $breadcrumbs[] = 'Index';
                         <td>{{ ($models->currentPage() - 1) * $models->perPage() + $loop->iteration }}</td>
                         <td>{{ $model->nip }}</td>
                         <td>{{ $model->employee_name }}</td>
+                        <td>{{ $model->kantor }}</td>
                         <td class="text-end">{{ number_format($model->jarak, 2) }}</td>
                         <td class="text-center">{{ $model->hari_kerja }}</td>
                         <td class="text-end">Rp {{ number_format($model->base_fare, 0, ',', '.') }}</td>
@@ -62,9 +64,18 @@ $breadcrumbs[] = 'Index';
                             <a href="{{ $viewHref($model) }}" data-pjax="0" class="text-info text-decoration-none me-2">
                                 <i class="bi bi-eye" data-bs-toggle="tooltip" data-bs-placement="top" title="View"></i>
                             </a>
-                            <a href="{{ $updateHref($model) }}" data-pjax="0" class="text-primary text-decoration-none">
-                                <i class="bi bi-pencil-square" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit"></i>
-                            </a>
+                            @if (auth()->user()->role->name === 'Admin HRD')
+                                <a href="{{ $updateHref($model) }}" data-pjax="0" class="text-primary text-decoration-none">
+                                    <i class="bi bi-pencil-square" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit"></i>
+                                </a>
+                                <form action="{{ $deleteHref($model) }}" method="POST" style="display: inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-link text-danger text-decoration-none p-0 border-0">
+                                        <i class="bi bi-trash" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete"></i>
+                                    </button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                     @empty

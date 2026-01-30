@@ -40,7 +40,7 @@ class OtpHelper
             return false;
         }
 
-        \Mail::to($otp->email)->send(new \App\Mail\Mail($otp));
+        // \Mail::to($otp->email)->send(new \App\Mail\Mail($otp));
         return true;
     }
 

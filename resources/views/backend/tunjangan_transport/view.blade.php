@@ -41,6 +41,10 @@ $breadcrumbs[] = 'Detail';
                             <td><strong>Jenis Pegawai</strong></td>
                             <td>: {{ $model->employee->jenis_pegawai }}</td>
                         </tr>
+                        <tr>
+                            <td><strong>Kantor</strong></td>
+                            <td>: {{ $model->kantor }}</td>
+                        </tr>
                     </table>
                 </div>
 

@@ -52,6 +52,17 @@ $breadcrumbs[] = 'Index';
 							<a href="{{ $updateHref($model) }}" data-pjax="0" class="text-primary text-decoration-none">
 								<i class="bi bi-pencil-square" data-bs-toggle="tooltip" data-bs-placement="top" title="Update"></i>
 							</a>
+							@if (auth()->user()->role->name === 'Admin HRD')
+								@if (auth()->user()->id != $model->id)
+									<form action="{{ $deleteHref($model) }}" method="POST" style="display: inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
+										@csrf
+										@method('DELETE')
+										<button type="submit" class="btn btn-link text-danger text-decoration-none p-0 border-0">
+											<i class="bi bi-trash" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete"></i>
+										</button>
+									</form>
+								@endif
+							@endif
 						</td>
 					</tr>
 					@empty

@@ -4,14 +4,8 @@ $indexHref = fn($params = []) => route('backend.presensi.index', array_merge(
 	$params,
 ));
 $createHref = route('backend.presensi.create');
-$updateHref = fn($model) => route('backend.presensi.edit', ['presensi' => $model]);
+$viewHref = fn($model) => route('backend.presensi.view', ['presensi' => $model->id_employee]);
 $deleteHref = fn($model) => route('backend.presensi.destroy', ['presensi' => $model, 'redirect' => $indexHref()]);
-$sortHref = fn($field) => route('backend.presensi.index', array_merge(
-	$request->query->all(),
-	[
-		'sorter' => $search->sorterQueryParam($field),
-	],
-));
 
 $title = $pageName = 'Rekap Presensi Pegawai';
 
@@ -23,18 +17,27 @@ $breadcrumbs[] = 'Index';
 @extends('backend/layouts/main', get_defined_vars())
 
 @section('content')
+	@if ($errors->any())
+		<div class="alert alert-danger">
+			<ul class="mb-0">
+				@foreach ($errors->all() as $error)
+					<li>{{ $error }}</li>
+				@endforeach
+			</ul>
+		</div>
+	@endif
+
 	<div class="card" id="index-pjax">
 		@include('backend.presensi.index_header', get_defined_vars())
 
-		<div class="card-body table-responsive p-0 m-0">
 		<div class="card-body table-responsive p-0 m-0">
 			<table class="table table-bordered table-hover p-0 m-0">
 				<thead>
 					<tr>
 						<th>No.</th>
-						<th><a href="{{ $sortHref('name') }}">Nama</a></th>
-						<th><a href="{{ $sortHref('jabatan') }}">Jabatan</a></th>
-						<th><a href="{{ $sortHref('total_hadir') }}">Hadir</a></th>
+						<th>Nama</th>
+						<th>Jabatan</th>
+						<th>Hadir</th>
 						<th>Status Hadir</th>
 						<th>Cuti</th>
 						<th>Kuota Cuti</th>
@@ -49,28 +52,22 @@ $breadcrumbs[] = 'Index';
 						<td>{{ ($models->currentPage() - 1) * $models->perPage() + $loop->iteration }}</td>
 						<td>{{ $model->name }}</td>
 						<td>{{ $model->jabatan }}</td>
-						<td class="text-center">
-							<span class="badge badge-primary">{{ $model->total_hadir }}</span>
+						<td>
+							<span class="badge badge-primary">{{ $model->durasi_hadir ? $model->durasi_hadir/8 : 0 }}</span>
 						</td>
-						<td class="text-center">
-							@if($model->status_hadir == 'Baik')
-								<span class="badge badge-success">{{ $model->status_hadir }}</span>
-							@elseif($model->status_hadir == 'Cukup')
-								<span class="badge badge-warning">{{ $model->status_hadir }}</span>
-							@else
-								<span class="badge badge-danger">{{ $model->status_hadir }}</span>
-							@endif
+						<td>
+							<span class="badge badge-success">{{ $model->durasi_hadir/8 > 20 ? 'terpenuhi' : 'tidak terpenuhi' }}</span>
 						</td>
-						<td class="text-center">
-							<span class="badge badge-info">{{ $model->total_cuti }}</span>
+						<td>
+							<span class="badge badge-info">{{ $model->cuti ?? 0 }}</span>
 						</td>
-						<td class="text-center">{{ $model->kuota_cuti }}</td>
-						<td class="text-center">
-							<span class="badge badge-secondary">{{ $model->total_izin }}</span>
+						<td>{{ $model->kuota_cuti }}</td>
+						<td>
+							<span class="badge badge-secondary">{{ $model->izin ?? 0 }}</span>
 						</td>
-						<td class="text-center">{{ $model->kuota_izin }}</td>
+						<td>{{ $model->kuota_izin }}</td>
 						<td class="text-nowrap">
-							<a href="{{ $updateHref($model) }}" data-pjax="0" class="text-primary text-decoration-none">
+							<a href="{{ $viewHref($model) }}" data-pjax="0" class="text-primary text-decoration-none">
 								<i class="bi bi-eye" data-bs-toggle="tooltip" data-bs-placement="top" title="Lihat Detail"></i>
 							</a>
 						</td>
@@ -87,6 +84,15 @@ $breadcrumbs[] = 'Index';
 		</div>
 
 		@include('backend/partials/index_footer', get_defined_vars())
+	</div>
+	<div class="alert alert-info mt-2" role="alert">
+		<small>
+			<strong>Petunjuk:</strong>
+			<ul class="mb-0 ps-3">
+				<li>Hadir : Total kehadiran pegawai dalam hari</li>
+				<li>Status Hadir : jika total hadir > 20 maka "terpehuni" selain itu "tidak terpehuni"</li>
+			</ul>
+		</small>
 	</div>
 @endsection
 

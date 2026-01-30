@@ -1,17 +1,16 @@
-@extends('layouts.backend.main')
+@extends('backend.layouts.main')
 
 @section('title', 'Detail Presensi - ' . $employee->name)
 
 @section('content')
-<div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Detail Presensi - {{ $employee->name }}</h3>
-                    <div class="card-tools">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title float-start">Detail Presensi - {{ $employee->name }}</h3>
+                    <div class="card-tools float-end">
                         <a href="{{ action([App\Backend\PresensiController::class, 'index']) }}?month={{ request('month') }}&year={{ request('year') }}" 
-                           class="btn btn-secondary btn-sm">
+                           class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Kembali ke List
                         </a>
                     </div>
@@ -19,201 +18,105 @@
 
                 <div class="card-body">
                     <!-- Info Pegawai -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
+                    <div class="row mb-2">
+                        <div class="col-md-12">
                             <div class="info-box">
-                                <span class="info-box-icon bg-info">
-                                    <i class="fas fa-user"></i>
-                                </span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">NIP Pegawai</span>
+                                    <span class="info-box-number">: {{ $employee->nip }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 mt-2">
+                            <div class="info-box">
                                 <div class="info-box-content">
                                     <span class="info-box-text">Nama Pegawai</span>
-                                    <span class="info-box-number">{{ $employee->name }}</span>
+                                    <span class="info-box-number">: {{ $employee->name }}</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-12 mt-2">
                             <div class="info-box">
-                                <span class="info-box-icon bg-primary">
-                                    <i class="fas fa-briefcase"></i>
-                                </span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Departemen</span>
+                                    <span class="info-box-number">: {{ $employee->departemen ?? '-' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 mt-2">
+                            <div class="info-box">
                                 <div class="info-box-content">
                                     <span class="info-box-text">Jabatan</span>
-                                    <span class="info-box-number">{{ $employee->jabatan ?? '-' }}</span>
+                                    <span class="info-box-number">: {{ $employee->jabatan ?? '-' }}</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Rekap Statistik -->
-                    <div class="row mb-4">
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-success">
-                                <div class="inner">
-                                    <h3>{{ $rekap->total_hadir ?? 0 }}</h3>
-                                    <p>Hari Hadir</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-check"></i>
+                        <div class="col-md-12 mt-2">
+                            <div class="info-box">
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Cuti</span>
+                                    <span class="info-box-number">: {{ $cutiDiambil }}/{{ $employee->kuota_cuti ?? '-' }}</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-info">
-                                <div class="inner">
-                                    <h3>{{ $rekap->total_cuti ?? 0 }}/{{ $rekap->kuota_cuti ?? 12 }}</h3>
-                                    <p>Cuti</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-calendar-times"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-warning">
-                                <div class="inner">
-                                    <h3>{{ $rekap->total_izin ?? 0 }}/{{ $rekap->kuota_izin ?? 6 }}</h3>
-                                    <p>Izin</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-clock"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-secondary">
-                                <div class="inner">
-                                    <h3>{{ round($rekap->avg_durasi_hadir ?? 0) }}</h3>
-                                    <p>Rata-rata Menit/Hari</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-stopwatch"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Filter Periode -->
-                    <form method="GET" class="mb-3">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <select name="month" class="form-control" onchange="this.form.submit()">
-                                    @foreach($months as $key => $monthName)
-                                        <option value="{{ $key }}" {{ request('month', now()->subMonth()->month) == $key ? 'selected' : '' }}>
-                                            {{ $monthName }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <select name="year" class="form-control" onchange="this.form.submit()">
-                                    @foreach($years as $yearOption)
-                                        <option value="{{ $yearOption }}" {{ request('year', now()->subMonth()->year) == $yearOption ? 'selected' : '' }}>
-                                            {{ $yearOption }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-
-                    <!-- Tabel Detail Presensi -->
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th width="5%">No</th>
-                                    <th width="12%">Tanggal</th>
-                                    <th width="15%">Lokasi Absen</th>
-                                    <th width="10%">Check In</th>
-                                    <th width="10%">Check Out</th>
-                                    <th width="8%">Hadir</th>
-                                    <th width="6%">Cuti</th>
-                                    <th width="6%">Izin</th>
-                                    <th width="8%">Durasi (mnt)</th>
-                                    <th width="10%">Verifikasi</th>
-                                    <th width="10%">Keterangan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($presensiData as $index => $data)
-                                    <tr>
-                                        <td>{{ $presensiData->firstItem() + $index }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($data->created_at)->format('d/m/Y') }}</td>
-                                        <td>{{ $data->lokasi_absen }}</td>
-                                        <td>
-                                            @if($data->checkin)
-                                                {{ \Carbon\Carbon::parse($data->checkin)->format('H:i') }}
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($data->checkout)
-                                                {{ \Carbon\Carbon::parse($data->checkout)->format('H:i') }}
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-center">
-                                            @if($data->hadir)
-                                                <span class="badge badge-success">{{ $data->hadir }}</span>
-                                            @else
-                                                <span class="text-muted">0</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-center">
-                                            @if($data->cuti)
-                                                <span class="badge badge-info">{{ $data->cuti }}</span>
-                                            @else
-                                                <span class="text-muted">0</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-center">
-                                            @if($data->izin)
-                                                <span class="badge badge-warning">{{ $data->izin }}</span>
-                                            @else
-                                                <span class="text-muted">0</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-center">{{ $data->durasi_hadir }}</td>
-                                        <td class="text-center">
-                                            @if($data->verifikasi == 'disetujui')
-                                                <span class="badge badge-success">Disetujui</span>
-                                            @elseif($data->verifikasi == 'ditolak')
-                                                <span class="badge badge-danger">Ditolak</span>
-                                            @else
-                                                <span class="badge badge-secondary">Pending</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <small>{{ Str::limit($data->keterangan, 50) }}</small>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="11" class="text-center text-muted py-4">
-                                            <i class="fas fa-inbox fa-2x mb-2"></i><br>
-                                            Tidak ada data presensi untuk periode ini
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <div>
-                            Menampilkan {{ $presensiData->firstItem() ?? 0 }} - {{ $presensiData->lastItem() ?? 0 }} 
-                            dari {{ $presensiData->total() }} data
-                        </div>
-                        {{ $presensiData->withQueryString()->links() }}
                     </div>
                 </div>
             </div>
+
+            <div class="card mt-3">
+                <div class="card-body table-responsive p-0 m-0">
+                    <table class="table table-bordered table-hover p-0 m-0">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Check-In</th>
+                                <th>Check-Out</th>
+                                <th>Lokasi Absen</th>
+                                <th>Kehadiran</th>
+                                <th>Durasi Hadir (Hari)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($models as $model)
+                            <tr>
+                                <td>{{ ($models->currentPage() - 1) * $models->perPage() + $loop->iteration }}</td>
+                                <th>{{ $model->checkin->format('Y-m-d H:i:s') }}</th>
+                                <th>{{ $model->checkout->format('Y-m-d H:i:s') }}</th>
+                                <th>{{ $model->lokasi_absen }}</th>
+                                <td>
+                                    @php
+                                        $statusHadir = $model->status_hadir;
+                                        if ($model->cuti > 0) {
+                                            $statusHadir = 'Cuti';
+                                        } elseif ($model->izin > 0) {
+                                            $statusHadir = 'Izin';
+                                        }
+                                    @endphp
+                                    <span class="badge">{{ $statusHadir }}</span>
+                                </td>
+                                <td>
+                                    {{ $model->durasi_hadir/8 }}
+                                </td>
+                                <td>
+                                    <span class="badge badge-primary">{{ $model->durasi_hadir >= 8 ? "Terpenuhi" : "Tidak Terpenuhi"    }}</span>
+                                </td>
+                            </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="999" class="text-center">
+                                        {{ __('Data Tidak Tersedia') }}
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                @include('backend/partials/index_footer', get_defined_vars())
+            </div>
         </div>
     </div>
-</div>
 @endsection
 
 @section('scripts')

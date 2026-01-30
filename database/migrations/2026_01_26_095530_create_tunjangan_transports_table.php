@@ -20,6 +20,7 @@ return new class extends Migration
             $table->decimal('jarak_bulat', 5, 0)->default(0);
             $table->decimal('tunjangan', 12, 2)->default(0);
             $table->text('keterangan')->nullable();
+            $table->string('kantor')->nullable();
             $table->timestamps();
             $table->foreign('employee_id')->references('id')->on('data_employees')->onDelete('cascade');
         });

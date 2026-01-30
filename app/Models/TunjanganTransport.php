@@ -20,7 +20,8 @@ class TunjanganTransport extends Model
         'hari_kerja',
         'jarak_bulat',
         'tunjangan',
-        'keterangan'
+        'keterangan',
+        'kantor'
     ];
 
     protected $casts = [
@@ -36,9 +37,10 @@ class TunjanganTransport extends Model
         return [
             'employee_id' => 'required|exists:data_employees,id',
             'base_fare' => 'required|numeric|min:0',
-            'jarak' => 'required|numeric|min:0|max:50',
+            'jarak' => 'required|numeric|min:0',
             'hari_kerja' => 'required|integer|min:0|max:31',
-            'keterangan' => 'nullable|string|max:255'
+            'keterangan' => 'nullable|string|max:255',
+            'kantor' => 'required'
         ];
     }
 
@@ -52,6 +54,8 @@ class TunjanganTransport extends Model
         if (!$this->employee) {
             $this->load('employee');
         }
+
+        $this->jarak = $this->jarak > 25 ? 25 : $this->jarak;
 
         if ($this->employee->jenis_pegawai !== 'Tetap') {
             $this->jarak_bulat = 0;

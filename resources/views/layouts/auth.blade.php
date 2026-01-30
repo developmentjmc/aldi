@@ -36,8 +36,6 @@ $lang = str_replace('_', '-', app()->getLocale());
     </div>
 
     @vite([
-        'resources/assets/tabler.min.js',
-        'resources/assets/backend.js',
-        'resources/assets/app.js',
+        'resources/assets/backend.ts',
     ])
 </html>

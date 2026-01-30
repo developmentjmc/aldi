@@ -4,19 +4,21 @@ namespace App\Backend;
 
 use App\Helpers\DataHelper;
 use App\Http\Controllers\Controller;
-use App\Models\Employee;
+use App\Models\DataMaster;
 use App\Models\Log;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Http\Request;
 use jeemce\controllers\AuthTrait;
 use jeemce\controllers\CrudTrait;
 
-class EmployeeController extends Controller
+class MasterController extends Controller
 {
-    use CrudTrait, AuthTrait;
+    use CrudTrait;
+	use AuthTrait;
 
     public function __construct()
 	{
-		$this->middlewareResourceAccess('backend.pegawai.%');
+		$this->middlewareResourceAccess('backend.master.%');
 	}
 
     /**
@@ -24,17 +26,23 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {
-		$query = DataHelper::getEmployee($request->all());
+		$sql = <<<SQL
+			SELECT * 
+			FROM data_masters
+			WHERE tipe in ('base fare', 'master')
+		SQL;
+		$query = DataMaster::query();
+		$query->from(new Expression("({$sql}) as data_masters"));
 
 		$search = new \jeemce\helpers\QuerySearch($query, [
 			'search' => $request->get('search'),
-			'searchFields' => ['name', 'nip', 'jabatan', 'jenis_pegawai'],
+			'searchFields' => ['name', 'description'],
 			'filter' => $request->get('filter'),
 			'sorter' => $request->get('sorter'),
 		]);
 
 		$models = $query->paginate(config('jeemce.pagination.per_page'));
-		return view("backend/employee/index", get_defined_vars());
+		return view("backend/master/index", get_defined_vars());
     }
 
 	public function form($id = null)
@@ -43,15 +51,9 @@ class EmployeeController extends Controller
 			$model = $this->findModel(['id' => $id]);
 			$this->validateAccess('update', $model);
 		} else {
-			$model = new \App\Models\Employee;
+			$model = new \App\Models\DataMaster;
 		}
-		return view('backend/employee/form', get_defined_vars());
-	}
-
-	public function pdf()
-	{
-		$models = DataHelper::getEmployee()->orderBy('name')->get();
-		return view('backend/employee/pdf/index', get_defined_vars());
+		return view('backend/master/form', get_defined_vars());
 	}
 
 	/**
@@ -62,9 +64,9 @@ class EmployeeController extends Controller
 		if ($id) {
 			$model = $this->findModel(['id' => $id]);
 			$aksi = 'update';
-			$deskripsi = "Mengupdate data pegawai: {$model->name} (NIP: {$model->nip})";
+			$deskripsi = "Mengupdate data master: {$model->name} (ID: {$model->id})";
 		} else {
-			$model = new \App\Models\Employee;
+			$model = new \App\Models\DataMaster;
 			$aksi = 'create';
 		}
 
@@ -77,37 +79,25 @@ class EmployeeController extends Controller
 		$model->saveOrFail();
 
 		if ($aksi == 'create') {
-			$deskripsi = "Menambah data pegawai baru: {$model->name} (NIP: {$model->nip})";
+			$deskripsi = "Menambah data master baru: {$model->name} (ID: {$model->id})";
 		}
-		Log::record($deskripsi, 'Pegawai', $aksi);
+		Log::record($deskripsi, 'Master', $aksi);
 
 		return redirect()->action([static::class, 'index'])->with('saveDone', 'Proses Simpan Berhasil');
 	}
 
 	/**
-	 * @return \App\models\Employee
+	 * @return \App\models\DataMaster
 	 * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
 	 */
 	public function findModel(array $params)
 	{
-		$model = \App\Models\Employee::query()->where($params)->firstOrFail();
+		$model = \App\Models\DataMaster::query()->where($params)->firstOrFail();
 		return $model;
 	}
 
 	public function destroy(Request $request, $id)
 	{
-		$model = $this->findModel(['id' => $id]);
-		$this->validateAccess('delete', $model);
-		
-		$name = $model->name;
-		$nip = $model->nip;
-		
-		$model->delete();
-		
-		// Log aktivitas delete
-		Log::record("Menghapus data pegawai: {$name} (NIP: {$nip})", 'Pegawai', 'delete');
-
-		$redirectUrl = $request->get('redirect') ?: route('backend.pegawai.index');
-		return redirect($redirectUrl)->with('deleteDone', 'Data berhasil dihapus');
+		return redirect()->action([static::class, 'index']);
 	}
 }

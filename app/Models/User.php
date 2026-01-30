@@ -84,6 +84,21 @@ class User extends Authenticatable
         return $rules;
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            $userLogin = auth()->user()->name;
+		    Log::record("{$userLogin } Menambah data user", 'User', 'create');
+        });
+
+        static::updating(function ($model) {
+            $userLogin = auth()->user()->name;
+            Log::record("{$userLogin} Mengupdate data user ID: {$model->id}", 'User', 'update');
+        });
+    }
+
     public function role()
     {
         return $this->belongsTo(Role::class, 'id_role', 'id');

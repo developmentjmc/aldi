@@ -2,6 +2,7 @@
 
 namespace App\Backend;
 
+use App\Helpers\ExcelTrait;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Presensi;
@@ -13,6 +14,7 @@ class PresensiController extends Controller
 {
     use \jeemce\controllers\CrudTrait;
     use \jeemce\controllers\AuthTrait;
+    use ExcelTrait;
 
     public function __construct()
     {
@@ -21,10 +23,10 @@ class PresensiController extends Controller
 
     public function index(Request $request)
     {
-        $month = $request->get('month', now()->subMonth()->month);
-        $year = $request->get('year', now()->subMonth()->year);
+        $month = $request->get('month');
+        $year = $request->get('year');
         
-        $sql = Presensi::rekapByEmployee($month, $year);
+        $sql = Presensi::rekapEmployee($month, $year);
         $query = \App\Models\Presensi::query();
 		$query->from(new \Illuminate\Database\Query\Expression("({$sql}) as presensi"));
 
@@ -37,48 +39,31 @@ class PresensiController extends Controller
 
         $models = $query->paginate(config('jeemce.pagination.per_page'));
         
-        $months = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-        ];
+        $months = \App\Helpers\DataHelper::getMonth();
         
         $years = range(date('Y') - 2, date('Y'));
 
         return view("backend/presensi/index", get_defined_vars());
     }
 
-    public function view($id)
+    public function view(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
         
-        $month = request()->get('month', now()->subMonth()->month);
-        $year = request()->get('year', now()->subMonth()->year);
-        
-        $presensiData = Presensi::where('id_employee', $id)
-                               ->byMonth($month, $year)
-                               ->orderBy('created_at', 'desc')
-                               ->paginate(config('jeemce.pagination.per_page'));
-                               
-        $rekap = Presensi::where('id_employee', $id)
-                         ->byMonth($month, $year)
-                         ->selectRaw('
-                            SUM(hadir) as total_hadir,
-                            SUM(cuti) as total_cuti, 
-                            SUM(izin) as total_izin,
-                            MAX(kuota_cuti) as kuota_cuti,
-                            MAX(kuota_izin) as kuota_izin,
-                            AVG(durasi_hadir) as avg_durasi_hadir
-                         ')
-                         ->first();
+        $sql = Presensi::rekapByEmployee($id);
+        $query = \App\Models\Presensi::query();
+		$query->from(new \Illuminate\Database\Query\Expression("({$sql}) as presensi"));
 
-        $months = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-        ];
-        
+        $search = new \jeemce\helpers\QuerySearch($query, [
+            'search' => $request->get('search'),
+            'searchFields' => ['name', 'jabatan'],
+            'filter' => $request->get('filter'),
+            'sorter' => $request->get('sorter'),
+        ]);
+
+        $models = $query->paginate(config('jeemce.pagination.per_page'));
         $years = range(date('Y') - 2, date('Y'));
+        $cutiDiambil = Presensi::where('id_employee', $id)->where('cuti', '>', 0)->sum('cuti');
 
         return view('backend/presensi/view', get_defined_vars());
     }
@@ -98,62 +83,108 @@ class PresensiController extends Controller
         return view('backend/presensi/form', get_defined_vars());
     }
 
-
-    /**
-     * @todo, nanti akan sy buat import
-     */
-    public function save(Request $request, $id = null)
-    {
-       exit('Fungsi Simpan belum tersedia, akan segera dibuatkan pada update berikutnya.');
-    }
-
     public function exportExcel(Request $request)
     {
         $month = $request->get('month', now()->subMonth()->month);
         $year = $request->get('year', now()->subMonth()->year);
 
-        // Data untuk export
-        $query = Presensi::rekapByEmployee($month, $year);
-        $data = DBHelper::select($query);
-
-        $headers = [
-            'Nama',
-            'Jabatan', 
-            'Hadir',
-            'Status Hadir',
-            'Cuti',
-            'Kuota Cuti',
-            'Izin',
-            'Kuota Izin'
-        ];
-
-        $rows = [];
-        foreach ($data as $item) {
-            $rows[] = [
-                $item->name,
-                $item->jabatan,
-                $item->total_hadir,
-                $item->status_hadir,
-                $item->total_cuti,
-                $item->kuota_cuti,
-                $item->total_izin,
-                $item->kuota_izin
-            ];
-        }
+        $data = DBHelper::select(<<<SQL
+            SELECT 
+                e.id,
+                e.name,
+                e.jabatan,
+                e.kuota_cuti,
+                e.kuota_izin
+            FROM data_employees e
+            ORDER BY e.name
+        SQL);
 
         $filename = "Rekap_Presensi_" . sprintf('%02d', $month) . "_" . $year . ".xlsx";
 
-        echo "<pre>";
-        print($headers);
-        echo "<pre>";
-        print_r($rows);
+        $options = [
+            'ID' => 'id',
+            'Nama' => 'Nama',
+            'Jabatan' => 'Jabatan',
+            'Checkin' => 'Checkin',
+            'Checkout' => 'Checkout',
+            'Cuti' => 'Cuti',
+            'Kuota Cuti' => 'Kuota Cuti',
+            'Izin' => 'Izin',
+            'Kuota Izin' => 'Kuota Izin',
+            'Gedung Kerja' => 'Gedung Kerja',
+        ];
 
-        // return (new \jeemce\controllers\ExcelExportV1Controller)->export([
-        //     'headers' => $headers,
-        //     'data' => $rows,
-        //     'filename' => $filename,
-        //     'title' => "Rekap Presensi Bulan " . $month . " Tahun " . $year
-        // ]);
+        $formattedData = array_map(function($item) {
+            return [
+                'ID' => $item->id,
+                'Nama' => $item->name,
+                'Jabatan' => $item->jabatan,
+                'Checkin' => null,
+                'Checkout' => null,
+                'Cuti' => null,
+                'Kuota Cuti' => $item->kuota_cuti,
+                'Izin' => null,
+                'Kuota Izin' => $item->kuota_izin,
+                'Gedung Kerja' => null
+            ];
+        }, $data);
+
+        $request->merge(['name' => pathinfo($filename, PATHINFO_FILENAME)]);
+        
+        return $this->excel($request, $formattedData, $options);
+    }
+
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|file|mimes:xlsx,xls'
+        ], [
+            'excel_file.required' => 'File harus berformat Excel (.xlsx, .xls)',
+            'excel_file.file' => 'File tidak valid',
+            'excel_file.mimes' => 'File harus berformat Excel (.xlsx, .xls)',
+        ]);
+
+        $file = $request->file('excel_file');
+        if (!$file || !$file->isValid()) {
+            return redirect()->back()->withErrors(['excel_file' => 'File tidak valid']);
+        }
+
+        // import data 
+        $xlsx = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
+		$dataexcel = $xlsx->getActiveSheet()->toArray(null, true, true, true);
+        
+        foreach ($dataexcel as $key => $value) {
+            if ($key == 1 || (empty($value['A']) && empty($value['B']))) {
+                continue;
+            }
+    
+            $checkIn = !empty($value['E']) ? date('Y-m-d H:i:s', strtotime($value['E'])) : null;
+            $where = [
+                'id_employee' => $value['A'],
+                'checkin' => !empty($checkIn) ? date('Y-m-d', strtotime($checkIn)) : null,
+                'lokasi_absen' => $value['K'],
+            ];
+
+            if (empty($value['K'])) {
+                return redirect()->back()->withErrors(['excel_file' => 'Lokasi Gedung harus diisi pada baris ke-' . $key]);
+            }
+
+            if (empty($value['B'])) {
+                return redirect()->back()->withErrors(['excel_file' => 'ID Pegawai harus diisi pada baris ke-' . $key]);
+            }
+
+            if (empty($value['E']) || empty($value['F'])) {
+                return redirect()->back()->withErrors(['excel_file' => 'Checkin dan Checkout harus diisi pada baris ke-' . $key]);
+            }
+
+            if ($value['G'] > 1 || $value['I'] > 1) {
+                return redirect()->back()->withErrors(['excel_file' => 'Kolom cuti dan izin tidak boleh di isi dengan value > 1 pada baris ke-' . $key]);
+            }
+
+            Presensi::firstOrNew($where, $value);
+        }
+
+        return redirect()->back()->with('success', 'Data presensi berhasil diimport');
     }
     
     public function findModel(array $params)
