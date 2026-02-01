@@ -4,6 +4,7 @@ namespace App\Backend;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use jeemce\helpers\AuthHelper;
 use jeemce\helpers\DBHelper;
 
@@ -19,10 +20,16 @@ class UserController extends Controller
 
 	public function index(Request $request)
 	{
+		$whereRole = '';
+		// if (Auth::user()->role->name != 'Superadmin') {
+		// 	$idLoggedUser = Auth::id();
+		// 	$whereRole = "AND users.created_by = {$idLoggedUser}";
+		// }
 		$sql = <<<SQL
 			SELECT users.*, roles.name AS role_name
 			FROM users
 			LEFT JOIN roles ON roles.id = users.id_role
+			WHERE 1=1 {$whereRole}
 		SQL;
 
 		// biar tetep bisa pakai preset
@@ -34,6 +41,7 @@ class UserController extends Controller
 			'searchFields' => ['name', 'email', 'phone', 'username', 'role_name'],
 			'filter' => $request->get('filter'),
 			'sorter' => $request->get('sorter'),
+			'defaultSorter' => ['id' => 'DESC'],
 		]);
 
 		$models = $query->paginate(config('jeemce.pagination.per_page'));
@@ -61,6 +69,11 @@ class UserController extends Controller
 			$model = new \App\Models\User;
 		}
 
+		$employees = \App\Helpers\DataHelper::getEmployee()
+		->orderBy('name')
+		->get()
+		->keyBy('id');
+
 		return view('backend/user/form', get_defined_vars());
 	}
 
@@ -79,6 +92,10 @@ class UserController extends Controller
 		$model->validator($params)->validate();
 		if ($request->ajax()) {
 			return;
+		}
+		if ($id && (empty($params['password']) || is_null($params['password']))) {
+			unset($params['password']);
+			unset($params['password_confirmation']);
 		}
 		$model->autoFill($params);
 		$model->saveOrFail();

@@ -28,6 +28,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
             $table->string('status', 32)->default('active');
+            $table->integer('created_by')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

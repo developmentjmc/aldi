@@ -24,6 +24,7 @@ class Employee extends Model
     {
         parent::boot();
         static::saving(function ($model) {
+            $model->no_hp = str_replace([' ', '+62'], '', $model->no_hp);
             $model->no_hp = '+62' . $model->no_hp;
         });
     }

@@ -22,6 +22,9 @@ $jenisPegawai = \App\Enums\JenisPegawaiEnum::options();
 	.choices{
 		margin-bottom: 0px !important;
 	}
+	.choices__list--dropdown{
+		z-index: 999 !important;
+	}
 </style>
 
 @section('content')

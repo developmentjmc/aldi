@@ -37,6 +37,7 @@ $breadcrumbs[] = 'Index';
                         <th><a href="{{ $sortHref('nip') }}">NIP</a></th>
                         <th><a href="{{ $sortHref('employee_name') }}">Nama Pegawai</a></th>
                         <th>Gedung Kerja</th>
+                        <th><a href="{{ $sortHref('bulan_tunjangan') }}">Bulan</a></th>
                         <th><a href="{{ $sortHref('jarak') }}">Jarak (km)</a></th>
                         <th><a href="{{ $sortHref('hari_kerja') }}">Hari Kerja</a></th>
                         <th><a href="{{ $sortHref('base_fare') }}">Tarif/km</a></th>
@@ -51,6 +52,7 @@ $breadcrumbs[] = 'Index';
                         <td>{{ $model->nip }}</td>
                         <td>{{ $model->employee_name }}</td>
                         <td>{{ $model->kantor }}</td>
+                        <td>{{ \Carbon\Carbon::parse($model->bulan_tunjangan)->translatedFormat('F Y') }}</td>
                         <td class="text-end">{{ number_format($model->jarak, 2) }}</td>
                         <td class="text-center">{{ $model->hari_kerja }}</td>
                         <td class="text-end">Rp {{ number_format($model->base_fare, 0, ',', '.') }}</td>

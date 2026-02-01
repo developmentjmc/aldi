@@ -21,7 +21,8 @@ class TunjanganTransport extends Model
         'jarak_bulat',
         'tunjangan',
         'keterangan',
-        'kantor'
+        'kantor',
+        'bulan_tunjangan'
     ];
 
     protected $casts = [
@@ -40,7 +41,8 @@ class TunjanganTransport extends Model
             'jarak' => 'required|numeric|min:0',
             'hari_kerja' => 'required|integer|min:0|max:31',
             'keterangan' => 'nullable|string|max:255',
-            'kantor' => 'required'
+            'kantor' => 'required',
+            'bulan_tunjangan' => 'required',
         ];
     }
 
@@ -57,7 +59,7 @@ class TunjanganTransport extends Model
 
         $this->jarak = $this->jarak > 25 ? 25 : $this->jarak;
 
-        if ($this->employee->jenis_pegawai !== 'Tetap') {
+        if ($this->employee?->jenis_pegawai !== 'Tetap') {
             $this->jarak_bulat = 0;
             $this->tunjangan = 0;
             return;
@@ -99,12 +101,12 @@ class TunjanganTransport extends Model
         });
 
         static::creating(function ($model) {
-            $userLogin = auth()->user()->name;
+            $userLogin = auth()->user()?->name ?? 'System';
 		    Log::record("{$userLogin } Menambah data tunjangan transport", 'Tunjangan Transport', 'create');
         });
 
         static::updating(function ($model) {
-            $userLogin = auth()->user()->name;
+            $userLogin = auth()->user()?->name ?? 'System';
             Log::record("{$userLogin} Mengupdate data tunjangan transport ID: {$model->id}", 'Tunjangan Transport', 'update');
         });
     }

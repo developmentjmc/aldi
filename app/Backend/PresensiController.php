@@ -160,7 +160,7 @@ class PresensiController extends Controller
     
             $checkIn = !empty($value['E']) ? date('Y-m-d H:i:s', strtotime($value['E'])) : null;
             $where = [
-                'id_employee' => $value['A'],
+                'id_employee' => $value['B'],
                 'checkin' => !empty($checkIn) ? date('Y-m-d', strtotime($checkIn)) : null,
                 'lokasi_absen' => $value['K'],
             ];

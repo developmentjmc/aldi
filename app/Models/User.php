@@ -29,6 +29,7 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
+        'status',
     ];
 
     /**
@@ -89,12 +90,12 @@ class User extends Authenticatable
         parent::boot();
 
         static::creating(function ($model) {
-            $userLogin = auth()->user()->name;
+            $userLogin = auth()->user()?->name ?? 'System';
 		    Log::record("{$userLogin } Menambah data user", 'User', 'create');
         });
 
         static::updating(function ($model) {
-            $userLogin = auth()->user()->name;
+            $userLogin = auth()->user()?->name ?? 'System';
             Log::record("{$userLogin} Mengupdate data user ID: {$model->id}", 'User', 'update');
         });
     }

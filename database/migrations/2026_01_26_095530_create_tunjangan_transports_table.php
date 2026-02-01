@@ -21,6 +21,7 @@ return new class extends Migration
             $table->decimal('tunjangan', 12, 2)->default(0);
             $table->text('keterangan')->nullable();
             $table->string('kantor')->nullable();
+            $table->string('bulan_tunjangan')->nullable();
             $table->timestamps();
             $table->foreign('employee_id')->references('id')->on('data_employees')->onDelete('cascade');
         });

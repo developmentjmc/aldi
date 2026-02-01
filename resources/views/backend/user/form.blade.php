@@ -13,6 +13,7 @@ if (isset($model->id)) {
 }
 
 $roleOptions = jeemce\models\Role::options('id','name');
+
 @endphp
 
 @extends('backend/layouts/main', get_defined_vars())
@@ -36,10 +37,19 @@ $roleOptions = jeemce\models\Role::options('id','name');
 
 	<div class="card mb-5">
 		<div class="card-body row">
+			<div class="col-md-12 mb-3">
+				<label for="" class="form-label">Pilih Pegawai</label>
+				<select name="employee" id="">
+					<option value="">-- Pilih Pegawai --</option>
+					@foreach ($employees as $item)
+						<option value="{{ $item->id }}">{{ $item->name }}</option>
+					@endforeach
+				</select>
+			</div>
 			<fieldset class="col-md-6">
 				<div class="col mb-3">
 					<label class="form-label required">Name</label>
-					<input name="name" class="form-control">
+					<input name="name" class="form-control" readonly>
 					<div class="invalid-feedback"></div>
 				</div>
 
@@ -57,7 +67,7 @@ $roleOptions = jeemce\models\Role::options('id','name');
 
 				<div class="col mb-3">
 					<label class="form-label required">Email</label>
-					<input name="email" class="form-control">
+					<input name="email" class="form-control" readonly>
 					<div class="invalid-feedback"></div>
 				</div>
 				
@@ -123,11 +133,41 @@ $roleOptions = jeemce\models\Role::options('id','name');
 @endsection
 
 @section('scripts')
+	<script id="data-employees" type="application/json">
+		{!! $employees->toJson(JSON_FORCE_OBJECT) !!}
+	</script>
+
 	<script id="data" type="application/json">
 		{!! $model->toJson(JSON_FORCE_OBJECT) !!}
 	</script>
 
 	<script type="module">
+		const employeeSelect = new Choices('select[name="employee"]', {
+			searchEnabled: true,
+			searchPlaceholderValue: 'Cari...',
+			noResultsText: 'Tidak ada data',
+			itemSelectText: 'Pilih',
+		});
+
+		// on change employee select
+		employeeSelect.passedElement.element.addEventListener('change', function(event) {
+			const selectedEmployeeId = event.target.value;
+			const el = document.getElementById('data-employees');
+    		const employeesData = JSON.parse(el.textContent);
+
+			if (employeesData[selectedEmployeeId]) {
+				const selectedEmployee = employeesData[selectedEmployeeId];
+				document.querySelector('input[name="name"]').value = selectedEmployee.name || '';
+				document.querySelector('input[name="phone"]').value = selectedEmployee.no_hp || '';
+				document.querySelector('input[name="email"]').value = selectedEmployee.email || '';
+			} else {
+				document.querySelector('input[name="name"]').value = '';
+				document.querySelector('input[name="phone"]').value = '';
+				document.querySelector('input[name="email"]').value = '';
+			}
+		});
+
+		// preset
 		const dataJson = jsonScriptToFormFields('#form', '#data');
 
 		$('#form').formAjaxSubmit();

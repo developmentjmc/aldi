@@ -40,7 +40,7 @@ class DataHelper
         $baseFare = DBHelper::selectOne(<<<SQL
             SELECT description base_fare
             FROM data_masters
-            WHERE tipe = 'base fare'
+            WHERE tipe = 'master' AND name = 'base fare'
         SQL)->base_fare;
         return $baseFare;
     }
@@ -57,18 +57,20 @@ class DataHelper
             }
         }
         $sql = <<<SQL
-			SELECT employees.id,
-				employees.nip,
-				employees.name,
-				employees.jabatan,
-				employees.jenis_pegawai,
-				employees.tanggal_masuk,
-				EXTRACT(YEAR FROM AGE(CURRENT_DATE, employees.tanggal_masuk)) AS masa_kerja
-			FROM data_employees AS employees
-			WHERE 1=1 {$whereMasaKerja}
-		SQL;
-		$query = \App\Models\Employee::query();
-		$query->from(new \Illuminate\Database\Query\Expression("({$sql}) as employees"));
+            SELECT employees.id,
+                   employees.nip,
+                   employees.name,
+                   employees.jabatan,
+                   employees.jenis_pegawai,
+                   employees.tanggal_masuk,
+                   employees.no_hp,
+                   employees.email,
+                   EXTRACT(YEAR FROM AGE(CURRENT_DATE, employees.tanggal_masuk)) AS masa_kerja
+            FROM data_employees AS employees
+            WHERE 1=1 {$whereMasaKerja}
+        SQL;
+        $query = \App\Models\Employee::query();
+        $query->from(new \Illuminate\Database\Query\Expression("({$sql}) as employees"));
         return $query;
     }
 

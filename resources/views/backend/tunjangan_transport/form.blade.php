@@ -40,7 +40,7 @@ if (isset($model->id)) {
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label required">Pegawai</label>
-                    <select name="employee_id" class="form-select" required>
+                    <select name="employee_id" class="form-select">
                         <option value="">Pilih Pegawai</option>
                         @foreach($employees as $employee)
                             <option value="{{ $employee->id }}" 
@@ -91,7 +91,7 @@ if (isset($model->id)) {
                     <label class="form-label required">Jarak (Dari Gedung)</label>
                     <div class="input-group">
                         <input type="number" name="jarak" class="form-control" step="0.01" min="0"
-                               value="{{ old('jarak', $model->jarak ?? '') }}" placeholder="12.5" required>
+                               value="{{ old('jarak', $model->jarak ?? '') }}" placeholder="12.5">
                         <span class="input-group-text">km</span>
                     </div>
                     <div class="form-text">Jarak dari rumah ke kantor. Max 25km untuk perhitungan tunjangan.</div>
@@ -100,11 +100,18 @@ if (isset($model->id)) {
             </div>
 
             <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-3 mb-3">
                     <label class="form-label required">Jumlah Hari Masuk Kerja</label>
                     <input type="number" name="hari_kerja" class="form-control" min="0" max="31"
-                           value="{{ old('hari_kerja', $model->hari_kerja ?? '') }}" placeholder="22" required>
+                           value="{{ old('hari_kerja', $model->hari_kerja ?? '') }}" placeholder="22">
                     <div class="form-text">Minimal 19 hari untuk mendapat tunjangan transport.</div>
+                    <div class="invalid-feedback"></div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label required">Bulan Tunjangan</label>
+                    <input type="month" name="bulan_tunjangan" class="form-control"
+                           value="{{ old('bulan_tunjangan', isset($model->bulan_tunjangan) ? \Carbon\Carbon::parse($model->bulan_tunjangan)->format('Y-m') : '') }}">
                     <div class="invalid-feedback"></div>
                 </div>
 
@@ -279,6 +286,10 @@ if (isset($model->id)) {
             }
         }
 
+        // trigger change on load data
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePegawaiDanKantor();
+        });
         // jmc preset 
 		const dataJson = jsonScriptToFormFields('#form', '#data');
 

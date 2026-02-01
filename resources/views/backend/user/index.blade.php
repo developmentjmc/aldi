@@ -48,9 +48,13 @@ $breadcrumbs[] = 'Index';
 								<i class="bi bi-pencil-square" data-bs-toggle="tooltip" data-bs-placement="top" title="Update"></i>
 							</a>
 							@if (auth()->user()->id != $model->id)
-							<a href="{{ $deleteHref($model) }}" data-pjax="0" onclick="modalDeleteConfirm(this, event)" class="text-danger text-decoration-none">
-								<i class="bi bi-trash" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete"></i>
-							</a>
+							<form action="{{ $deleteHref($model) }}" method="POST" style="display: inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
+								@csrf
+								@method('DELETE')
+								<button type="submit" class="btn btn-link text-danger text-decoration-none p-0 border-0">
+									<i class="bi bi-trash" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete"></i>
+								</button>
+							</form>
 							@endif
 						</td>
 						<td>{{ date('d-m-Y', strtotime($model->created_at)) }}</td>
