@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Validation\Rules\Password as RulesPassword;
+use Laravel\Sanctum\HasApiTokens;
 use jeemce\helpers\ArrayHelper;
 use jeemce\models\CrudTrait;
 use jeemce\models\MainTrait;
@@ -15,7 +16,7 @@ use jeemce\models\Role;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, CrudTrait, MainTrait;
+    use HasFactory, Notifiable, CrudTrait, MainTrait, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.

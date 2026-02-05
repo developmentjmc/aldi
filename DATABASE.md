@@ -33,7 +33,7 @@ menus
 accesses
     - id
     - id_role
-    - id_menu
+    - id_menu <> menus.id
     - read
     - view
     - create
@@ -126,7 +126,8 @@ tunjangan_transports
 data_presensi
     - id
     - id_employee
-    - lokasi_absen (Gedung Utama,Gedung A,Gedung B)
+    - lokasi_checkin (Gedung Utama,Gedung A,Gedung B)
+    - lokasi_checkout
     - checkin
     - checkout
     - name

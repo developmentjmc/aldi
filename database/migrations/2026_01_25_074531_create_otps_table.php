@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('id_user');
             $table->string('code', 6);
+            $table->string('code2', 6);
             $table->timestamp('expired_at');
             $table->boolean('is_used')->default(false);
             $table->timestamp('created_at')->useCurrent();

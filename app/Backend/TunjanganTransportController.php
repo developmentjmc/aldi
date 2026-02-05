@@ -99,7 +99,7 @@ class TunjanganTransportController extends Controller
         if ($request->ajax()) {
             return;
         }
-        
+
         $model->autoFill($params);
         
         $model->calculateTunjangan();

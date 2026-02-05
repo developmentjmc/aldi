@@ -13,12 +13,15 @@
     ],
     "require": {
         "php": "^8.4",
+        "darkaonline/l5-swagger": "^10.1",
         "jeemce/imagine": "@dev",
         "jeemce/laravel": "@dev",
         "jeemce/laravel-theme-admin-v5": "@dev",
         "laravel/framework": "^12.0",
+        "laravel/sanctum": "^4.3",
         "laravel/tinker": "^2.10.1",
-        "phpoffice/phpspreadsheet": "^2.4"
+        "phpoffice/phpspreadsheet": "^2.4",
+        "zircote/swagger-php": "^6.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

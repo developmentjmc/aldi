@@ -1,0 +1,166 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API KEPEGAWAIAN ALDI",
+        "description": "API Dokumentasi untuk sistem kepegawaian",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/kepegawaian-aldi/public/api/wilayah": {
+            "get": {
+                "tags": [
+                    "wilayah"
+                ],
+                "summary": "Ambil data wilayah",
+                "description": "List semua wilayah",
+                "operationId": "f7e3111efe17682fce9396d81015557d",
+                "parameters": [
+                    {
+                        "name": "tipe",
+                        "in": "query",
+                        "description": "Tipe wilayah",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "kecamatan"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Kata kunci pencarian",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": ""
+                        }
+                    },
+                    {
+                        "name": "parent_id",
+                        "in": "query",
+                        "description": "ID parent",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/kepegawaian-aldi/public/api/test": {
+            "get": {
+                "tags": [
+                    "test"
+                ],
+                "summary": "Test API",
+                "operationId": "6a7761a08a59b8e5f7612760b743968a",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/kepegawaian-aldi/public/api/login": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login dan dapatkan token",
+                "description": "Login untuk mendapatkan Bearer token",
+                "operationId": "4b17b9d9e2cd079b59d12a286635f0bf",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "username",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "username": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|abc123..."
+                                        },
+                                        "user": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Login gagal"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "wilayah",
+            "description": "wilayah"
+        },
+        {
+            "name": "test",
+            "description": "test"
+        },
+        {
+            "name": "auth",
+            "description": "auth"
+        }
+    ]
+}

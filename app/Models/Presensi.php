@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\DataHelper;
 use Illuminate\Container\Attributes\DB;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -134,7 +135,8 @@ class Presensi extends Model
                 data_employees.kuota_izin,
                 data_presensi.checkin,
                 data_presensi.checkout,
-                data_presensi.lokasi_absen
+                data_presensi.lokasi_checkin,
+                data_presensi.lokasi_checkout
             FROM data_presensi
             left JOIN data_employees ON data_presensi.id_employee = data_employees.id 
             WHERE data_presensi.id_employee = {$id}
@@ -151,12 +153,14 @@ class Presensi extends Model
             FROM data_presensi
             WHERE id_employee = :id_employee
                 AND DATE(checkin) = :checkin
-                AND lokasi_absen = :lokasi_absen
+                AND lokasi_checkin = :lokasi_checkin
+                AND lokasi_checkout = :lokasi_checkout
             LIMIT 1
         SQL, [
             'id_employee' => $where['id_employee'],
             'checkin' => $where['checkin'],
-            'lokasi_absen' => $where['lokasi_absen'],
+            'lokasi_checkin' => $where['lokasi_checkin'],
+            'lokasi_checkout' => $where['lokasi_checkout'],
         ]);
 
         $checkIn = !empty($value['E']) ? date('Y-m-d H:i:s', strtotime($value['E'])) : null;
@@ -196,7 +200,8 @@ class Presensi extends Model
             'id_employee' => $value['B'],
             'checkin' => $checkIn,
             'checkout' => $checkOut,
-            'lokasi_absen' => $value['K'],
+            'lokasi_checkin' => $value['K'],
+            'lokasi_checkout' => $value['L'],
             'name' => $value['C'] ?? null,
             'jabatan' => $value['D'] ?? null,
             'status_hadir' => $statusHadir,
@@ -211,11 +216,11 @@ class Presensi extends Model
         if (!$check) {
             DBHelper::insert(<<<SQL
                 INSERT INTO data_presensi 
-                (id_employee, checkin, checkout, lokasi_absen, name, jabatan, 
+                (id_employee, checkin, checkout, lokasi_checkin, lokasi_checkout, name, jabatan, 
                 status_hadir, cuti, kuota_cuti, izin, kuota_izin, durasi_hadir, 
                 keterangan, created_at, updated_at)
                 VALUES 
-                (:id_employee, :checkin, :checkout, :lokasi_absen, :name, :jabatan, 
+                (:id_employee, :checkin, :checkout, :lokasi_checkin, :lokasi_checkout, :name, :jabatan, 
                 :status_hadir, :cuti, :kuota_cuti, :izin, :kuota_izin, :durasi_hadir, 
                 :keterangan, :created_at, :updated_at)
             SQL, array_merge($data, [
@@ -238,13 +243,113 @@ class Presensi extends Model
                     durasi_hadir = :durasi_hadir,
                     keterangan = :keterangan,
                     updated_at = :updated_at,
-                    lokasi_absen = :lokasi_absen
+                    lokasi_checkin = :lokasi_checkin,
+                    lokasi_checkout = :lokasi_checkout
                 WHERE id = :id
             SQL, array_merge($data, [
                 'updated_at' => now(),
                 'id' => $check->id,
             ]));
         }
-        return $check;
+
+        /**
+         * save tunjangan otomatis
+         */
+        $pegawai = DBHelper::selectOne("SELECT latitude, longitude FROM data_employees WHERE id = :id", [
+            'id' => $value['B'],
+        ]);
+        $kantor = DBHelper::selectOne("SELECT description FROM data_masters WHERE name = :name", [
+            'name' => $value['K'],
+        ]);
+        $kantor = explode(',', trim($kantor->description));
+        $jarak = DataHelper::hitungJarak(
+            $pegawai->latitude,
+            $pegawai->longitude,
+            $kantor[0],
+            $kantor[1]
+        );
+        $hariKerja = DBHelper::selectOne(<<<SQL
+            SELECT COUNT(*) AS hari_kerja
+            FROM data_presensi
+            WHERE id_employee = :id_employee
+                AND EXTRACT(MONTH FROM checkin) = :month
+                AND EXTRACT(YEAR FROM checkin) = :year
+                AND status_hadir = 'Hadir'
+                AND lokasi_checkin = :lokasi_checkin
+        SQL, [
+            'id_employee' => $value['B'],
+            'month' => $checkIn ? date('m', strtotime($checkIn)) : date('m'),
+            'year' => $checkIn ? date('Y', strtotime($checkIn)) : date('Y'),
+            'lokasi_checkin' => $value['K'],
+        ]);
+        $hariKerja = $hariKerja?->hari_kerja ?? 0;
+
+        $dataTunjangan = [
+            'employee_id' => (int)$value['B'],
+            'base_fare' => DataHelper::getBaseFare(),
+            'kantor' => $value['K'],
+            'jarak' => $jarak,
+            'hari_kerja' => $hariKerja,
+            'bulan_tunjangan' => date('Y-m', strtotime($checkIn)),
+            'keterangan' => 'otomatis dari presensi',
+        ];
+
+        $check = DBHelper::selectOne(<<<SQL
+            SELECT *
+            FROM tunjangan_transports
+            WHERE employee_id = :employee_id
+                AND bulan_tunjangan = :bulan_tunjangan
+            LIMIT 1
+        SQL, [
+            'employee_id' => $value['B'],
+            'bulan_tunjangan' => date('Y-m', strtotime($checkIn)),
+        ]);
+
+        $model = new \App\Models\TunjanganTransport;
+        $model->autoFill($dataTunjangan);
+        $model->calculateTunjangan();
+        if (!$check) {
+            DBHelper::insert(<<<SQL
+                INSERT INTO tunjangan_transports 
+                (employee_id, base_fare, jarak, hari_kerja, tunjangan, keterangan, kantor, bulan_tunjangan, created_at, updated_at)
+                VALUES 
+                (:employee_id, :base_fare, :jarak, :hari_kerja, :tunjangan, :keterangan, :kantor, :bulan_tunjangan, :created_at, :updated_at)
+            SQL, [
+                'employee_id' => $model->employee_id,
+                'base_fare' => $model->base_fare,
+                'jarak' => $model->jarak,
+                'hari_kerja' => $model->hari_kerja,
+                'tunjangan' => $model->tunjangan,
+                'keterangan' => $model->keterangan,
+                'kantor' => $model->kantor,
+                'bulan_tunjangan' => $model->bulan_tunjangan,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } else {
+            DBHelper::update(<<<SQL
+                UPDATE tunjangan_transports 
+                SET base_fare = :base_fare,
+                    jarak = :jarak,
+                    hari_kerja = :hari_kerja,
+                    tunjangan = :tunjangan,
+                    keterangan = :keterangan,
+                    kantor = :kantor,
+                    jarak_bulat = :jarak_bulat,
+                    updated_at = :updated_at
+                WHERE id = :id
+            SQL, [
+                'base_fare' => $model->base_fare,
+                'jarak' => $model->jarak,
+                'hari_kerja' => $model->hari_kerja,
+                'tunjangan' => $model->tunjangan,
+                'keterangan' => $model->keterangan,
+                'kantor' => $model->kantor,
+                'jarak_bulat' => $model->jarak_bulat,
+                'updated_at' => now(),
+                'id' => $check->id,
+            ]);
+        }
+
     }
 }

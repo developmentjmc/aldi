@@ -82,4 +82,16 @@ class DataHelper
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
     }
+
+    public static function hitungJarak($kantorLat, $kantorLong, $latitude, $longitude)
+    {
+        $R = 6371;
+        $dLat = ($kantorLat - $latitude) * M_PI / 180;
+        $dLon = ($kantorLong - $longitude) * M_PI / 180;
+        $a = sin($dLat/2) * sin($dLat/2) + cos($latitude * M_PI / 180) * cos($kantorLat * M_PI / 180) * sin($dLon/2) * sin($dLon/2);
+        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+        $distance = $R * $c;
+        $distance = round($distance, 2);
+        return $distance;
+    }
 }

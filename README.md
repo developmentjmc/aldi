@@ -62,7 +62,7 @@ fitur : sistem autentikasi, role management, hak ases menu, maste pegawai, maste
 
 ## Rules
 - variable wajib camelcase
-- query wajib menggunakan raw query
+- query > easy wajib menggunakan raw query
 - wajib menggunakan migrasi
 - jika ada penggunaan kode berulang wajib menggunakan helper
 - jika query select dirasa terlalu panjang gunakan view

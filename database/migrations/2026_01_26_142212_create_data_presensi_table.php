@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('data_presensi', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('id_employee');
-            $table->enum('lokasi_absen', ['Gedung Utama', 'Gedung A', 'Gedung B']);
+            $table->string('lokasi_checkin')->nullable();
+            $table->string('lokasi_checkout')->nullable();
             $table->datetime('checkin')->nullable();
             $table->datetime('checkout')->nullable();
             $table->string('name');

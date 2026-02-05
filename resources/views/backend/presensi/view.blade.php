@@ -71,7 +71,8 @@
                                 <th>No.</th>
                                 <th>Check-In</th>
                                 <th>Check-Out</th>
-                                <th>Lokasi Absen</th>
+                                <th>Lokasi Checkin</th>
+                                <th>Lokasi Checkout</th>
                                 <th>Kehadiran</th>
                                 <th>Durasi Hadir (Hari)</th>
                                 <th>Status</th>
@@ -83,7 +84,8 @@
                                 <td>{{ ($models->currentPage() - 1) * $models->perPage() + $loop->iteration }}</td>
                                 <th>{{ $model->checkin->format('Y-m-d H:i:s') }}</th>
                                 <th>{{ $model->checkout->format('Y-m-d H:i:s') }}</th>
-                                <th>{{ $model->lokasi_absen }}</th>
+                                <th>{{ $model->lokasi_checkin }}</th>
+                                <th>{{ $model->lokasi_checkout }}</th>
                                 <td>
                                     @php
                                         $statusHadir = $model->status_hadir;

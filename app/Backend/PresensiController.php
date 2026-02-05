@@ -36,6 +36,7 @@ class PresensiController extends Controller
             'filter' => $request->get('filter'),
             'sorter' => $request->get('sorter'),
         ]);
+        // dd($query->get()->toArray());
 
         $models = $query->paginate(config('jeemce.pagination.per_page'));
         
@@ -111,7 +112,8 @@ class PresensiController extends Controller
             'Kuota Cuti' => 'Kuota Cuti',
             'Izin' => 'Izin',
             'Kuota Izin' => 'Kuota Izin',
-            'Gedung Kerja' => 'Gedung Kerja',
+            'Lokasi Checkin' => 'Lokasi Checkin',
+            'Lokasi Checkout' => 'Lokasi Checkout',
         ];
 
         $formattedData = array_map(function($item) {
@@ -125,7 +127,8 @@ class PresensiController extends Controller
                 'Kuota Cuti' => $item->kuota_cuti,
                 'Izin' => null,
                 'Kuota Izin' => $item->kuota_izin,
-                'Gedung Kerja' => null
+                'Lokasi Checkin' => null,
+                'Lokasi Checkout' => null,
             ];
         }, $data);
 
@@ -162,11 +165,16 @@ class PresensiController extends Controller
             $where = [
                 'id_employee' => $value['B'],
                 'checkin' => !empty($checkIn) ? date('Y-m-d', strtotime($checkIn)) : null,
-                'lokasi_absen' => $value['K'],
+                'lokasi_checkin' => $value['K'],
+                'lokasi_checkout' => $value['L']
             ];
 
-            if (empty($value['K'])) {
-                return redirect()->back()->withErrors(['excel_file' => 'Lokasi Gedung harus diisi pada baris ke-' . $key]);
+            if (empty($value['K']) || empty($value['L'])) {
+                return redirect()->back()->withErrors(['excel_file' => 'Lokasi CheckIn dan Checkout harus diisi pada baris ke-' . $key]);
+            }
+
+            if (!empty($value['K']) && !empty($value['L']) && $value['K'] != $value['L']) {
+                return redirect()->back()->withErrors(['excel_file' => 'Lokasi CheckIn dan Checkout tidak boleh berbeda, baris ke-' . $key]);
             }
 
             if (empty($value['B'])) {

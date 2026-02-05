@@ -36,8 +36,8 @@ $breadcrumbs[] = 'Index';
 					@forelse($models as $model)
 					<tr>
 						<td>{{ ($models->currentPage() - 1) * $models->perPage() + $loop->iteration }}</td>
-						<td>{{ $model->tanggal }}</td>
-						<td>{{ $model->jam }}</td>
+						<td>{{ date('Y-m-d', strtotime($model->tanggal)) }}</td>
+						<td>{{ date('H:i:s', strtotime($model->jam)) }}</td>
 						<td>{{ $model->username }}</td>
 						<td>{{ $model->modul }}</td>
 						<td>
